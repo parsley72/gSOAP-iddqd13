@@ -960,6 +960,10 @@ extern intmax_t __strtoull(const char*, char**, int);
 
 /* #define DEBUG_STAMP */ /* Uncomment to debug sending (in file SENT.log) receiving (in file RECV.log) and time-stamped operations (in file TEST.log) */
 
+#ifdef DEBUG
+# include <syslog.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -1908,7 +1912,8 @@ typedef unsigned short soap_ssl_flags;
 
 #ifdef SOAP_DEBUG
 # ifndef SOAP_MESSAGE
-#  define SOAP_MESSAGE fprintf
+  #  define SOAP_MESSAGE(USELESS_FDEBUG, ...) \
+     syslog(LOG_NOTICE, ##__VA_ARGS__);
 # endif
 # ifndef DBGLOG
 #  ifdef DEBUG_STAMP
@@ -1947,28 +1952,13 @@ typedef unsigned short soap_ssl_flags;
 #   endif
 #  else
 #   define DBGLOG(DBGFILE, CMD) \
-{ if (soap)\
-  { if (!soap->fdebug[SOAP_INDEX_##DBGFILE])\
-      soap_open_logfile((struct soap*)soap, SOAP_INDEX_##DBGFILE);\
-    if (soap->fdebug[SOAP_INDEX_##DBGFILE])\
-    { FILE *fdebug = soap->fdebug[SOAP_INDEX_##DBGFILE];\
-      CMD;\
-      fflush(fdebug);\
-    }\
-  }\
+{ CMD;\
 }
 #  endif
 # endif
 # ifndef DBGMSG
 #  define DBGMSG(DBGFILE, MSG, LEN) \
-{ if (soap)\
-  { if (!soap->fdebug[SOAP_INDEX_##DBGFILE])\
-      soap_open_logfile((struct soap*)soap, SOAP_INDEX_##DBGFILE);\
-    if (soap->fdebug[SOAP_INDEX_##DBGFILE])\
-    { fwrite((void*)(MSG), 1, (size_t)(LEN), soap->fdebug[SOAP_INDEX_##DBGFILE]);\
-      fflush(soap->fdebug[SOAP_INDEX_##DBGFILE]);\
-    }\
-  }\
+{ syslog(LOG_NOTICE, "%s", MSG); \
 }
 # endif
 # ifndef DBGFUN
